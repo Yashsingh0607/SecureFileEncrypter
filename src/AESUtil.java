@@ -4,6 +4,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import java.security.SecureRandom;
 import java.util.Base64;
+import javax.crypto.spec.SecretKeySpec;
 
 public class AESUtil {
 
@@ -55,5 +56,14 @@ public class AESUtil {
         byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
 
         return new String(decryptedBytes);
+    }
+
+    public static String encodeKey(SecretKey key) {
+        return Base64.getEncoder().encodeToString(key.getEncoded());
+    }
+
+    public static SecretKey decodeKey(String keyString) {
+        byte[] decoded = Base64.getDecoder().decode(keyString);
+        return new SecretKeySpec(decoded, 0, decoded.length, "AES");
     }
 }
