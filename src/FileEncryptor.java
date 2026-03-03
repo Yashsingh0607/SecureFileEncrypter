@@ -1,9 +1,7 @@
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.security.SecureRandom;
 
 public class FileEncryptor {
@@ -11,15 +9,11 @@ public class FileEncryptor {
     public static void encryptFile(String filePath, SecretKey key) throws Exception {
 
         File inputFile = new File(filePath);
-
         if (!inputFile.exists()) {
-            throw new Exception("File not found.");
+            throw new Exception("❌ File not found.");
         }
 
-        FileInputStream fis = new FileInputStream(inputFile);
-        byte[] fileBytes = new byte[(int) inputFile.length()];
-        fis.read(fileBytes);
-        fis.close();
+        byte[] fileBytes = readFile(inputFile);
 
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 
@@ -37,23 +31,20 @@ public class FileEncryptor {
         System.arraycopy(iv, 0, combined, 0, iv.length);
         System.arraycopy(encryptedBytes, 0, combined, iv.length, encryptedBytes.length);
 
-        FileOutputStream fos = new FileOutputStream(filePath + ".enc");
-        fos.write(combined);
-        fos.close();
+        String encryptedFileName = getEncryptedFileName(filePath);
+        writeFile(encryptedFileName, combined);
+
+        System.out.println("✅ File encrypted successfully: " + encryptedFileName);
     }
 
     public static void decryptFile(String filePath, SecretKey key) throws Exception {
 
         File inputFile = new File(filePath);
-
         if (!inputFile.exists()) {
-            throw new Exception("File not found.");
+            throw new Exception("❌ File not found.");
         }
 
-        FileInputStream fis = new FileInputStream(inputFile);
-        byte[] fileBytes = new byte[(int) inputFile.length()];
-        fis.read(fileBytes);
-        fis.close();
+        byte[] fileBytes = readFile(inputFile);
 
         byte[] iv = new byte[16];
         byte[] encryptedBytes = new byte[fileBytes.length - 16];
@@ -68,8 +59,40 @@ public class FileEncryptor {
 
         byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
 
-        FileOutputStream fos = new FileOutputStream(filePath.replace(".enc", "_decrypted"));
-        fos.write(decryptedBytes);
+        String decryptedFileName = getDecryptedFileName(filePath);
+        writeFile(decryptedFileName, decryptedBytes);
+
+        System.out.println("✅ File decrypted successfully: " + decryptedFileName);
+    }
+
+    // Helper Methods
+
+    private static byte[] readFile(File file) throws IOException {
+        FileInputStream fis = new FileInputStream(file);
+        byte[] bytes = new byte[(int) file.length()];
+        fis.read(bytes);
+        fis.close();
+        return bytes;
+    }
+
+    private static void writeFile(String filePath, byte[] data) throws IOException {
+        FileOutputStream fos = new FileOutputStream(filePath);
+        fos.write(data);
         fos.close();
+    }
+
+    private static String getEncryptedFileName(String originalPath) {
+        int dotIndex = originalPath.lastIndexOf(".");
+        if (dotIndex == -1) {
+            return originalPath + "_encrypted.enc";
+        }
+        return originalPath.substring(0, dotIndex) + "_encrypted.enc";
+    }
+
+    private static String getDecryptedFileName(String encryptedPath) {
+        if (encryptedPath.endsWith("_encrypted.enc")) {
+            return encryptedPath.replace("_encrypted.enc", "_decrypted.txt");
+        }
+        return encryptedPath.replace(".enc", "_decrypted.txt");
     }
 }
