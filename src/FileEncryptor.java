@@ -2,34 +2,38 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import java.io.*;
-import java.security.SecureRandom;
+import java.util.Arrays;
 
 public class FileEncryptor {
 
-    public static void encryptFile(String filePath, SecretKey key) throws Exception {
+    public static void encryptFile(String filePath, String password) throws Exception {
 
         File inputFile = new File(filePath);
         if (!inputFile.exists()) {
-            throw new Exception("❌ File not found.");
+            throw new Exception("File not found.");
         }
 
         byte[] fileBytes = readFile(inputFile);
 
+        // Generate salt + IV
+        byte[] salt = AESUtil.generateSalt();
+        byte[] iv = AESUtil.generateIV();
+
+        // Derive key from password
+        SecretKey key = AESUtil.generateKeyFromPassword(password, salt);
+
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-
-        byte[] iv = new byte[16];
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(iv);
-
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
         cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
 
         byte[] encryptedBytes = cipher.doFinal(fileBytes);
 
-        // Combine IV + encrypted data
-        byte[] combined = new byte[iv.length + encryptedBytes.length];
-        System.arraycopy(iv, 0, combined, 0, iv.length);
-        System.arraycopy(encryptedBytes, 0, combined, iv.length, encryptedBytes.length);
+        // Combine salt + IV + encrypted data
+        byte[] combined = new byte[salt.length + iv.length + encryptedBytes.length];
+
+        System.arraycopy(salt, 0, combined, 0, salt.length);
+        System.arraycopy(iv, 0, combined, salt.length, iv.length);
+        System.arraycopy(encryptedBytes, 0, combined, salt.length + iv.length, encryptedBytes.length);
 
         String encryptedFileName = getEncryptedFileName(filePath);
         writeFile(encryptedFileName, combined);
@@ -37,24 +41,29 @@ public class FileEncryptor {
         System.out.println("✅ File encrypted successfully: " + encryptedFileName);
     }
 
-    public static void decryptFile(String filePath, SecretKey key) throws Exception {
+    public static void decryptFile(String filePath, String password) throws Exception {
 
         File inputFile = new File(filePath);
         if (!inputFile.exists()) {
-            throw new Exception("❌ File not found.");
+            throw new Exception("File not found.");
         }
 
         byte[] fileBytes = readFile(inputFile);
 
-        byte[] iv = new byte[16];
-        byte[] encryptedBytes = new byte[fileBytes.length - 16];
+        if (fileBytes.length < 32) {
+            throw new Exception("Invalid encrypted file.");
+        }
 
-        System.arraycopy(fileBytes, 0, iv, 0, 16);
-        System.arraycopy(fileBytes, 16, encryptedBytes, 0, encryptedBytes.length);
+        // Extract salt, IV, ciphertext
+        byte[] salt = Arrays.copyOfRange(fileBytes, 0, 16);
+        byte[] iv = Arrays.copyOfRange(fileBytes, 16, 32);
+        byte[] encryptedBytes = Arrays.copyOfRange(fileBytes, 32, fileBytes.length);
+
+        // Regenerate key from password + salt
+        SecretKey key = AESUtil.generateKeyFromPassword(password, salt);
 
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
-
         cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
 
         byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
@@ -65,7 +74,7 @@ public class FileEncryptor {
         System.out.println("✅ File decrypted successfully: " + decryptedFileName);
     }
 
-    // Helper Methods
+    // ---------------- Helper Methods ----------------
 
     private static byte[] readFile(File file) throws IOException {
         FileInputStream fis = new FileInputStream(file);

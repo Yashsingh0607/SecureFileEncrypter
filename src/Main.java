@@ -1,4 +1,3 @@
-import javax.crypto.SecretKey;
 import java.util.Scanner;
 
 public class Main {
@@ -21,7 +20,7 @@ public class Main {
             try {
                 choice = Integer.parseInt(scanner.nextLine());
             } catch (Exception e) {
-                System.out.println("❌ Invalid input. Enter number only.");
+                System.out.println("❌ Invalid input.");
                 continue;
             }
 
@@ -32,11 +31,11 @@ public class Main {
                     System.out.print("Enter file path to encrypt: ");
                     String path = scanner.nextLine();
 
-                    SecretKey key = AESUtil.generateKey();
-                    FileEncryptor.encryptFile(path, key);
+                    System.out.print("Enter password: ");
+                    String password = scanner.nextLine();
 
-                    System.out.println("\n🔑 IMPORTANT: Save this key safely:");
-                    System.out.println(AESUtil.encodeKey(key));
+                    FileEncryptor.encryptFile(path, password);
+
                 }
 
                 else if (choice == 2) {
@@ -44,11 +43,10 @@ public class Main {
                     System.out.print("Enter encrypted file path: ");
                     String path = scanner.nextLine();
 
-                    System.out.print("Enter Base64 key: ");
-                    String keyString = scanner.nextLine();
+                    System.out.print("Enter password: ");
+                    String password = scanner.nextLine();
 
-                    SecretKey key = AESUtil.decodeKey(keyString);
-                    FileEncryptor.decryptFile(path, key);
+                    FileEncryptor.decryptFile(path, password);
                 }
 
                 else if (choice == 3) {
