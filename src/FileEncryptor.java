@@ -66,7 +66,13 @@ public class FileEncryptor {
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
         cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
 
-        byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
+        byte[] decryptedBytes;
+
+        try {
+            decryptedBytes = cipher.doFinal(encryptedBytes);
+        } catch (Exception e) {
+            throw new Exception("Incorrect password or corrupted file.");
+        }
 
         String decryptedFileName = getDecryptedFileName(filePath);
         writeFile(decryptedFileName, decryptedBytes);
