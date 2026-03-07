@@ -7,7 +7,7 @@ import java.util.Base64;
 public class AESUtil {
 
     private static final int KEY_SIZE = 128; // 128-bit AES
-    private static final int ITERATIONS = 65536;
+    private static final int ITERATIONS = 200000;
 
     // Generate AES key from password + salt
     public static SecretKey generateKeyFromPassword(String password, byte[] salt) throws Exception {
@@ -33,9 +33,9 @@ public class AESUtil {
         return salt;
     }
 
-    // Generate random IV
+    // Generate random IV for AES-GCM
     public static byte[] generateIV() {
-        byte[] iv = new byte[16];
+        byte[] iv = new byte[12];
         SecureRandom random = new SecureRandom();
         random.nextBytes(iv);
         return iv;

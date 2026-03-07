@@ -1,8 +1,11 @@
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import java.io.*;
 import java.util.Arrays;
+import javax.crypto.spec.GCMParameterSpec;
 
 public class FileEncryptor {
 
@@ -13,30 +16,35 @@ public class FileEncryptor {
             throw new Exception("File not found.");
         }
 
-        byte[] fileBytes = readFile(inputFile);
-
-        // Generate salt + IV
         byte[] salt = AESUtil.generateSalt();
         byte[] iv = AESUtil.generateIV();
 
-        // Derive key from password
         SecretKey key = AESUtil.generateKeyFromPassword(password, salt);
 
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        IvParameterSpec ivSpec = new IvParameterSpec(iv);
-        cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
-
-        byte[] encryptedBytes = cipher.doFinal(fileBytes);
-
-        // Combine salt + IV + encrypted data
-        byte[] combined = new byte[salt.length + iv.length + encryptedBytes.length];
-
-        System.arraycopy(salt, 0, combined, 0, salt.length);
-        System.arraycopy(iv, 0, combined, salt.length, iv.length);
-        System.arraycopy(encryptedBytes, 0, combined, salt.length + iv.length, encryptedBytes.length);
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
+        cipher.init(Cipher.ENCRYPT_MODE, key, gcmSpec);
 
         String encryptedFileName = getEncryptedFileName(filePath);
-        writeFile(encryptedFileName, combined);
+
+        FileInputStream fis = new FileInputStream(inputFile);
+        FileOutputStream fos = new FileOutputStream(encryptedFileName);
+
+        // Write salt + iv first
+        fos.write(salt);
+        fos.write(iv);
+
+        CipherOutputStream cos = new CipherOutputStream(fos, cipher);
+
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+
+        while ((bytesRead = fis.read(buffer)) != -1) {
+            cos.write(buffer, 0, bytesRead);
+        }
+
+        cos.close();
+        fis.close();
 
         System.out.println("✅ File encrypted successfully: " + encryptedFileName);
     }
@@ -48,34 +56,34 @@ public class FileEncryptor {
             throw new Exception("File not found.");
         }
 
-        byte[] fileBytes = readFile(inputFile);
+        FileInputStream fis = new FileInputStream(inputFile);
 
-        if (fileBytes.length < 32) {
-            throw new Exception("Invalid encrypted file.");
-        }
+        byte[] salt = new byte[16];
+        byte[] iv = new byte[12];
 
-        // Extract salt, IV, ciphertext
-        byte[] salt = Arrays.copyOfRange(fileBytes, 0, 16);
-        byte[] iv = Arrays.copyOfRange(fileBytes, 16, 32);
-        byte[] encryptedBytes = Arrays.copyOfRange(fileBytes, 32, fileBytes.length);
+        fis.read(salt);
+        fis.read(iv);
 
-        // Regenerate key from password + salt
         SecretKey key = AESUtil.generateKeyFromPassword(password, salt);
 
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        IvParameterSpec ivSpec = new IvParameterSpec(iv);
-        cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
+        cipher.init(Cipher.DECRYPT_MODE, key, gcmSpec);
 
-        byte[] decryptedBytes;
-
-        try {
-            decryptedBytes = cipher.doFinal(encryptedBytes);
-        } catch (Exception e) {
-            throw new Exception("Incorrect password or corrupted file.");
-        }
+        CipherInputStream cis = new CipherInputStream(fis, cipher);
 
         String decryptedFileName = getDecryptedFileName(filePath);
-        writeFile(decryptedFileName, decryptedBytes);
+        FileOutputStream fos = new FileOutputStream(decryptedFileName);
+
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+
+        while ((bytesRead = cis.read(buffer)) != -1) {
+            fos.write(buffer, 0, bytesRead);
+        }
+
+        cis.close();
+        fos.close();
 
         System.out.println("✅ File decrypted successfully: " + decryptedFileName);
     }
@@ -105,9 +113,21 @@ public class FileEncryptor {
     }
 
     private static String getDecryptedFileName(String encryptedPath) {
+
         if (encryptedPath.endsWith("_encrypted.enc")) {
-            return encryptedPath.replace("_encrypted.enc", "_decrypted.txt");
+
+            String baseName = encryptedPath.replace("_encrypted.enc", "");
+
+            int dotIndex = baseName.lastIndexOf(".");
+            if (dotIndex != -1) {
+                String name = baseName.substring(0, dotIndex);
+                String extension = baseName.substring(dotIndex);
+                return name + "_decrypted" + extension;
+            }
+
+            return baseName + "_decrypted";
         }
-        return encryptedPath.replace(".enc", "_decrypted.txt");
+
+        return encryptedPath.replace(".enc", "_decrypted");
     }
 }
