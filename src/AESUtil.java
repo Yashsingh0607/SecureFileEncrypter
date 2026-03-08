@@ -1,52 +1,77 @@
-import javax.crypto.*;
-import javax.crypto.spec.*;
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 import java.security.SecureRandom;
-import java.security.spec.KeySpec;
-import java.util.Base64;
 
 public class AESUtil {
 
-    private static final int KEY_SIZE = 128; // 128-bit AES
-    private static final int ITERATIONS = 200000;
+    private static final int AES_KEY_SIZE = 256;
+    private static final int GCM_IV_LENGTH = 12;
+    private static final int GCM_TAG_LENGTH = 128;
+    private static final int SALT_LENGTH = 16;
+    private static final int PBKDF2_ITERATIONS = 1200000;
 
-    // Generate AES key from password + salt
-    public static SecretKey generateKeyFromPassword(String password, byte[] salt) throws Exception {
-
-        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-
-        KeySpec spec = new PBEKeySpec(
-                password.toCharArray(),
-                salt,
-                ITERATIONS,
-                KEY_SIZE
-        );
-
-        SecretKey tmp = factory.generateSecret(spec);
-        return new SecretKeySpec(tmp.getEncoded(), "AES");
-    }
-
-    // Generate random salt
     public static byte[] generateSalt() {
-        byte[] salt = new byte[16];
+        byte[] salt = new byte[SALT_LENGTH];
         SecureRandom random = new SecureRandom();
         random.nextBytes(salt);
         return salt;
     }
 
-    // Generate random IV for AES-GCM
     public static byte[] generateIV() {
-        byte[] iv = new byte[12];
+        byte[] iv = new byte[GCM_IV_LENGTH];
         SecureRandom random = new SecureRandom();
         random.nextBytes(iv);
         return iv;
     }
 
-    // Encode to Base64 (for debugging if needed)
-    public static String encode(byte[] data) {
-        return Base64.getEncoder().encodeToString(data);
+    public static SecretKey getKeyFromPassword(String password, byte[] salt) throws Exception {
+
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+
+        PBEKeySpec spec = new PBEKeySpec(
+                password.toCharArray(),
+                salt,
+                PBKDF2_ITERATIONS,
+                AES_KEY_SIZE
+        );
+
+        SecretKey secret = new SecretKeySpec(
+                factory.generateSecret(spec).getEncoded(),
+                "AES"
+        );
+
+        return secret;
     }
 
-    public static byte[] decode(String data) {
-        return Base64.getDecoder().decode(data);
+    public static Cipher getEncryptCipher(SecretKey key, byte[] iv) throws Exception {
+
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+
+        GCMParameterSpec parameterSpec = new GCMParameterSpec(
+                GCM_TAG_LENGTH,
+                iv
+        );
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, parameterSpec);
+
+        return cipher;
+    }
+
+    public static Cipher getDecryptCipher(SecretKey key, byte[] iv) throws Exception {
+
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+
+        GCMParameterSpec parameterSpec = new GCMParameterSpec(
+                GCM_TAG_LENGTH,
+                iv
+        );
+
+        cipher.init(Cipher.DECRYPT_MODE, key, parameterSpec);
+
+        return cipher;
     }
 }

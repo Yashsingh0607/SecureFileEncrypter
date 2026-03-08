@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/README.md/README.md.iml" filepath="$PROJECT_DIR$/README.md/README.md.iml" />
       <module fileurl="file://$PROJECT_DIR$/SecureFileEncrypter.iml" filepath="$PROJECT_DIR$/SecureFileEncrypter.iml" />
+      <module fileurl="file://$PROJECT_DIR$/install.bat/install.bat.iml" filepath="$PROJECT_DIR$/install.bat/install.bat.iml" />
     </modules>
   </component>
 </project>
