@@ -1,77 +1,97 @@
-# 🔐 Secure File Encrypter (Java)
+🔐 Secure File Encrypter (Java)
 
-A password-based file encryption tool built using Java and modern cryptographic standards.
+A password-based file encryption CLI tool built in Java using modern cryptographic standards.
 
 This project securely encrypts and decrypts files using:
 
-- AES (Advanced Encryption Standard)
-- CBC Mode with PKCS5 Padding
-- PBKDF2 (Password-Based Key Derivation)
-- Random Salt
-- Random Initialization Vector (IV)
+AES (Advanced Encryption Standard)
 
----
+CBC Mode with PKCS5 Padding
 
-## 🚀 Features
+PBKDF2 (Password-Based Key Derivation)
 
-✔ Password-based encryption  
-✔ PBKDF2 with 65,536 iterations  
-✔ Random Salt for every encryption  
-✔ Random IV for security  
-✔ Proper encrypted file structure  
-✔ Clean CLI interface  
-✔ Error handling for wrong password
+Random Salt
 
----
+Random Initialization Vector (IV)
 
-## 📁 Encrypted File Structure
+🚀 Features
+
+✔ Password-based encryption
+✔ PBKDF2 with 65,536 iterations
+✔ Random salt generated for every encryption
+✔ Random IV for additional security
+✔ Proper encrypted file structure
+✔ Clean command-line interface (CLI)
+✔ Error handling for incorrect password
+
+📦 Installation
+
+1️⃣ Clone the repository
+
+git clone https://github.com/yourusername/secure-file-encrypter.git
+
+2️⃣ Navigate to the project
+
+cd secure-file-encrypter
+
+3️⃣ Run the installer
+
+install.bat
+
+This installs the CLI command:
+
+sfe
+▶ Usage
+Encrypt a file
+sfe encrypt file.txt myPassword
+Decrypt a file
+sfe decrypt file.txt.enc myPassword
+📁 Encrypted File Structure
 
 Each encrypted file contains:
+
 [ 16 bytes SALT ]
 [ 16 bytes IV ]
 [ Ciphertext ]
+
 This ensures strong cryptographic design.
 
----
+🛠 How It Works
 
-## 🛠 How It Works
+User enters file path and password
 
-1. User enters file path and password.
-2. A random salt is generated.
-3. AES key is derived from password using PBKDF2.
-4. Random IV is generated.
-5. File is encrypted using AES/CBC.
-6. Salt + IV + Ciphertext are stored in the output file.
+A random salt is generated
 
----
+AES key is derived using PBKDF2
 
-## ▶ How to Run
+A random IV is generated
 
-Compile and run:
-javac *.java
-java Main
+File is encrypted using AES/CBC
 
----
+Salt + IV + Ciphertext are written to the output file
 
-## ⚠ Important
+⚠ Important
 
-- If password is incorrect, decryption will fail.
-- Always remember your password.
-- This tool does not store passwords.
+If the password is incorrect, decryption will fail
 
----
+Passwords are never stored
 
-## 🔮 Future Improvements
+Always remember your password
 
-- AES-GCM (Authenticated Encryption)
-- HMAC integrity verification
-- GUI version
-- Drag & drop encryption
-- Secure key vault integration
+🔮 Future Improvements
 
----
+AES-GCM (authenticated encryption)
 
-## 📌 Author
-YASH VARDHAN SINGH
+HMAC integrity verification
+
+GUI version
+
+Drag & drop encryption
+
+Secure key vault integration
+
+👨‍💻 Author
+
+Yash Vardhan Singh
 
 Built as a cryptography-focused project to demonstrate secure file encryption using Java.
