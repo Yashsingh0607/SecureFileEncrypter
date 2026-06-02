@@ -11,90 +11,133 @@ public class FileEncryptor {
     public static void encryptFile(String inputPath, String password) throws Exception {
 
         File inputFile = new File(inputPath);
-        String outputPath = inputPath + ".enc";
 
-        FileInputStream fis = new FileInputStream(inputFile);
-        FileOutputStream fos = new FileOutputStream(outputPath);
+        if (!inputFile.exists()) {
+            throw new FileNotFoundException("File not found.");
+        }
+
+        String outputPath = inputPath + ".enc";
 
         byte[] salt = AESUtil.generateSalt();
         byte[] iv = AESUtil.generateIV();
 
-        fos.write(salt);
-        fos.write(iv);
-
         SecretKey key = AESUtil.getKeyFromPassword(password, salt);
         Cipher cipher = AESUtil.getEncryptCipher(key, iv);
 
-        CipherOutputStream cos = new CipherOutputStream(fos, cipher);
+        try (
+                FileInputStream fis = new FileInputStream(inputFile);
+                FileOutputStream fos = new FileOutputStream(outputPath)
+        ) {
 
-        byte[] buffer = new byte[BUFFER_SIZE];
-        int bytesRead;
+            fos.write(salt);
+            fos.write(iv);
 
-        long totalSize = inputFile.length();
-        long processed = 0;
-        int lastProgress = -1;
+            try (CipherOutputStream cos = new CipherOutputStream(fos, cipher)) {
 
-        while ((bytesRead = fis.read(buffer)) != -1) {
+                byte[] buffer = new byte[BUFFER_SIZE];
+                int bytesRead;
 
-            cos.write(buffer, 0, bytesRead);
+                long totalSize = inputFile.length();
+                long processed = 0;
+                int lastProgress = -1;
 
-            processed += bytesRead;
-            int progress = (int)((processed * 100) / totalSize);
+                while ((bytesRead = fis.read(buffer)) != -1) {
 
-            if (progress != lastProgress) {
-                System.out.print("\rEncrypting: " + progress + "%");
-                lastProgress = progress;
+                    cos.write(buffer, 0, bytesRead);
+
+                    processed += bytesRead;
+
+                    int progress = totalSize == 0
+                            ? 100
+                            : (int) ((processed * 100) / totalSize);
+
+                    if (progress != lastProgress) {
+                        System.out.print("\rEncrypting: " + progress + "%");
+                        lastProgress = progress;
+                    }
+                }
             }
         }
 
-        cos.close();
-        fis.close();
-
-        System.out.println("\n[SUCCESS] File encrypted successfully: " + outputPath);
+        System.out.println("\n[SUCCESS] File encrypted successfully:");
+        System.out.println(outputPath);
     }
 
     public static void decryptFile(String inputPath, String password) throws Exception {
 
         File inputFile = new File(inputPath);
-        String outputPath = inputPath.replace(".enc", "");
 
-        FileInputStream fis = new FileInputStream(inputFile);
-
-        byte[] salt = new byte[16];
-        byte[] iv = new byte[12];
-
-        fis.read(salt);
-        fis.read(iv);
-
-        SecretKey key = AESUtil.getKeyFromPassword(password, salt);
-        Cipher cipher = AESUtil.getDecryptCipher(key, iv);
-
-        CipherInputStream cis = new CipherInputStream(fis, cipher);
-        FileOutputStream fos = new FileOutputStream(outputPath);
-
-        byte[] buffer = new byte[BUFFER_SIZE];
-        int bytesRead;
-
-        long totalSize = inputFile.length();
-        long processed = 0;
-        int lastProgress = -1;
-
-        while ((bytesRead = cis.read(buffer)) != -1) {
-
-            fos.write(buffer, 0, bytesRead);
-
-            processed += bytesRead;
-            int progress = (int)((processed * 100) / totalSize);
-
-            if (progress != lastProgress) {
-                System.out.print("\rDecrypting: " + progress + "%");
-                lastProgress = progress;
-            }
+        if (!inputFile.exists()) {
+            throw new FileNotFoundException("File not found.");
         }
 
-        cis.close();
-        fos.close();
+        if (inputFile.length() < 28) {
+            throw new IOException("Invalid encrypted file.");
+        }
 
-        System.out.println("\n[SUCCESS] File decrypted successfully: " + outputPath);
+        String outputPath = inputPath.replace(".enc", "");
+
+        try (
+                FileInputStream fis = new FileInputStream(inputFile)
+        ) {
+
+            byte[] salt = new byte[16];
+            byte[] iv = new byte[12];
+
+            if (fis.read(salt) != 16) {
+                throw new IOException("Unable to read salt.");
+            }
+
+            if (fis.read(iv) != 12) {
+                throw new IOException("Unable to read IV.");
+            }
+
+            SecretKey key = AESUtil.getKeyFromPassword(password, salt);
+            Cipher cipher = AESUtil.getDecryptCipher(key, iv);
+
+            try (
+                    CipherInputStream cis = new CipherInputStream(fis, cipher);
+                    FileOutputStream fos = new FileOutputStream(outputPath)
+            ) {
+
+                byte[] buffer = new byte[BUFFER_SIZE];
+                int bytesRead;
+
+                long totalSize = inputFile.length();
+                long processed = 0;
+                int lastProgress = -1;
+
+                while ((bytesRead = cis.read(buffer)) != -1) {
+
+                    fos.write(buffer, 0, bytesRead);
+
+                    processed += bytesRead;
+
+                    int progress = totalSize == 0
+                            ? 100
+                            : (int) ((processed * 100) / totalSize);
+
+                    if (progress != lastProgress) {
+                        System.out.print("\rDecrypting: " + progress + "%");
+                        lastProgress = progress;
+                    }
+                }
+            }
+        }
+        catch (IOException e) {
+
+            File outputFile = new File(outputPath);
+
+            if (outputFile.exists()) {
+                outputFile.delete();
+            }
+
+            throw new Exception(
+                    "Wrong password or file has been modified."
+            );
+        }
+
+        System.out.println("\n[SUCCESS] File decrypted successfully:");
+        System.out.println(outputPath);
     }
 }

@@ -1,14 +1,32 @@
 @echo off
 
-echo Installing Secure File Encrypter CLI...
+echo ==================================
+echo Secure File Encrypter Installer
+echo ==================================
+
+java -version >nul 2>&1
+
+if errorlevel 1 (
+    echo Java is not installed.
+    echo Please install Java 17 or later.
+    pause
+    exit /b
+)
 
 mkdir C:\tools 2>nul
 
-copy SecureFileEncrypter.jar C:\tools\SecureFileEncrypter.jar
+copy /Y SecureFileEncrypter.jar C:\tools\SecureFileEncrypter.jar >nul
 
-echo @echo off > C:\tools\sfe.bat
-echo java -jar "C:\tools\SecureFileEncrypter.jar" %%* >> C:\tools\sfe.bat
+(
+echo @echo off
+echo java -jar "C:\tools\SecureFileEncrypter.jar" %%*
+) > C:\tools\sfe.bat
 
-echo Installation complete!
-echo You can now run:
-echo sfe encrypt file.txt password
+echo.
+echo Installation complete.
+echo.
+echo Run:
+echo C:\tools\sfe.bat --help
+echo.
+
+pause

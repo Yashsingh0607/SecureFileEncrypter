@@ -92,8 +92,19 @@ public class Main {
                     System.out.print("Enter file path: ");
                     String path = scanner.nextLine();
 
-                    System.out.print("Enter password: ");
-                    String password = scanner.nextLine();
+
+                    java.io.Console console = System.console();
+
+                    String password;
+
+                    if (console != null) {
+                        password = new String(
+                                console.readPassword("Enter password: ")
+                        );
+                    } else {
+                        System.out.print("Enter password: ");
+                        password = scanner.nextLine();
+                    }
 
                     FileEncryptor.encryptFile(path, password);
 

@@ -1,113 +1,222 @@
-🔐 Secure File Encrypter (Java)
+# 🔐 Secure File Encrypter
 
+A secure password-based file encryption utility written in Java using modern cryptographic standards.
 
-A password-based file encryption CLI tool written in Java using modern cryptographic standards.
+This tool allows users to encrypt and decrypt files from the command line while protecting data with strong encryption, authenticated encryption, random salts, and secure key derivation.
 
-This tool securely encrypts and decrypts files using:
+---
 
-AES (Advanced Encryption Standard)
+## 🚀 Features
 
-CBC Mode with PKCS5 Padding
+✅ AES-256 Encryption
 
-PBKDF2 Password Key Derivation
+✅ AES-GCM Authenticated Encryption
 
-Random Salt
+✅ PBKDF2-HMAC-SHA256 Key Derivation
 
-Random Initialization Vector (IV)
+✅ 1,200,000 PBKDF2 Iterations
 
-🚀 Features
+✅ Random Salt Generation
 
-✔ Password-based encryption
-✔ PBKDF2 with 65,536 iterations
-✔ Random salt for every encryption
-✔ Random IV for additional security
-✔ Clean command line interface
-✔ Error handling for incorrect password
-✔ Secure encrypted file structure
+✅ Random IV Generation
 
-📦 Installation
+✅ File Integrity Verification
 
-Download the latest release from the Releases page.
+✅ Password-Based Security
 
-Or clone the repository:
+✅ Command Line Interface (CLI)
 
-git clone https://github.com/yourusername/secure-file-encrypter.git
-cd secure-file-encrypter
+✅ Interactive Mode Support
 
-Run the installer:
+✅ Large File Streaming Support
 
+---
+
+## 🔒 Cryptography Used
+
+### Encryption Algorithm
+
+* AES-256-GCM
+
+### Key Derivation
+
+* PBKDF2WithHmacSHA256
+* 1,200,000 iterations
+* Random 16-byte salt
+
+### Authentication
+
+AES-GCM provides:
+
+* Confidentiality
+* Integrity
+* Authentication
+
+Any modification to the encrypted file will cause decryption to fail.
+
+---
+
+## 📦 Installation
+
+### Prerequisites
+
+* Java 8 or later
+
+Verify Java installation:
+
+```bash
+java -version
+```
+
+### Clone Repository
+
+```bash
+git clone https://github.com/Yashsingh0607/SecureFileEncrypter.git
+cd SecureFileEncrypter
+```
+
+### Install CLI Command
+
+Run:
+
+```bash
 install.bat
+```
 
-This installs the CLI command:
+This creates:
 
-sfe
-▶ Usage
-Encrypt a file
-sfe encrypt file.txt myPassword
-Decrypt a file
-sfe decrypt file.txt.enc myPassword
+```text
+C:\tools\SecureFileEncrypter.jar
+C:\tools\sfe.bat
+```
 
-Example output:
+---
 
+## 🖥 Usage
+
+### Show Help
+
+```bash
+java -jar SecureFileEncrypter.jar --help
+```
+
+### Encrypt File
+
+```bash
+java -jar SecureFileEncrypter.jar encrypt file.txt MyPassword
+```
+
+### Decrypt File
+
+```bash
+java -jar SecureFileEncrypter.jar decrypt file.txt.enc MyPassword
+```
+
+---
+
+## Example
+
+Encrypt:
+
+```bash
+java -jar SecureFileEncrypter.jar encrypt secret.txt MyPassword
+```
+
+Output:
+
+```text
 Encrypting: 100%
-[SUCCESS] File encrypted successfully
-🖥 CLI Example
-C:\Users> sfe encrypt secret.txt myPassword
+[SUCCESS] File encrypted successfully:
+secret.txt.enc
+```
 
-Encrypting: 100%
-[SUCCESS] File encrypted successfully: secret.txt.enc
-📁 Encrypted File Structure
+Decrypt:
+
+```bash
+java -jar SecureFileEncrypter.jar decrypt secret.txt.enc MyPassword
+```
+
+Output:
+
+```text
+Decrypting: 100%
+[SUCCESS] File decrypted successfully:
+secret.txt
+```
+
+---
+
+## 📁 Encrypted File Structure
 
 Each encrypted file contains:
 
-[ 16 bytes SALT ]
-[ 16 bytes IV ]
-[ Ciphertext ]
+```text
+[16 Bytes Salt]
+[12 Bytes IV]
+[Ciphertext + Authentication Tag]
+```
 
-This ensures strong cryptographic design.
+This allows secure key regeneration and authenticated decryption.
 
-🛠 How It Works
+---
 
-User enters file path and password
+## ⚙ How It Works
 
-Random salt is generated
+1. User provides a file and password.
+2. A random salt is generated.
+3. PBKDF2 derives a secure AES key.
+4. A random IV is generated.
+5. File data is encrypted using AES-GCM.
+6. Salt and IV are stored alongside the ciphertext.
+7. During decryption, the key is regenerated from the password and salt.
+8. AES-GCM verifies file integrity before releasing plaintext.
 
-AES key is derived using PBKDF2
+---
 
-Random IV is generated
+## 🛡 Security Notes
 
-File is encrypted using AES/CBC
+* Passwords are never stored.
+* Every encryption operation uses a unique salt.
+* Every encryption operation uses a unique IV.
+* AES-GCM detects tampering automatically.
+* Incorrect passwords cause decryption failure.
+* File contents are streamed, allowing encryption of large files.
 
-Salt + IV + Ciphertext are written to the output file
+---
 
-⚠ Security Notes
+## 🛠 Technologies Used
 
-Incorrect password will cause decryption failure
+* Java
+* Java Cryptography Architecture (JCA)
+* AES-GCM
+* PBKDF2-HMAC-SHA256
+* SecureRandom
+* File Streams
+* Command Line Interface
 
-Passwords are never stored
+---
 
-Always keep your password secure
+## 🔮 Future Improvements
 
-🔮 Future Improvements
+* Folder Encryption
+* JavaFX GUI
+* Drag-and-Drop Support
+* Multi-File Encryption
+* Cross-Platform Installer
+* Password Strength Meter
+* Unit Testing with JUnit
+* Maven Build Support
 
-AES-GCM authenticated encryption
+---
 
-HMAC integrity verification
-
-GUI version
-
-Drag & drop encryption
-
-Cross-platform installer
-
-Secure key vault integration
-
-👨‍💻 Author
+## 👨‍💻 Author
 
 Yash Vardhan Singh
 
-Built as a cryptography-focused project demonstrating secure file encryption using Java.
+Secure File Encrypter was built as a cryptography-focused Java project demonstrating modern password-based file encryption techniques.
 
-⭐ Support
+---
 
-If you like this project, consider giving it a star on GitHub.
+## ⭐ Support
+
+If you found this project useful, consider starring the repository.
